@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Hub · 技能统一管理</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfcfd; --border:#e3e6ea;
+  --text:#1c2024; --text-2:#5b6572; --text-3:#8b95a1;
+  --accent:#3b6ef5; --accent-soft:#eaf0ff; --accent-text:#2b52c4;
+  --ok:#12a150; --ok-soft:#e7f7ee;
+  --warn:#c47f17; --warn-soft:#fdf4e5;
+  --err:#d63b3b; --err-soft:#fdeceb;
+  --radius:10px; --radius-sm:7px;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 12px rgba(16,24,40,.04);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--accent);text-decoration:none}
+
+/* ---------- 布局 ---------- */
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px 64px}
+header{
+  background:var(--panel); border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:50;
+}
+.hd{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:650;font-size:16px;letter-spacing:-.01em}
+.logo svg{width:26px;height:26px}
+.logo .sub{font-weight:400;color:var(--text-3);font-size:12.5px;padding-left:10px;border-left:1px solid var(--border);margin-left:2px}
+.hd-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 13px;
+  border-radius:var(--radius-sm);font-weight:500;font-size:13.5px;
+  transition:.13s; white-space:nowrap; border:1px solid transparent;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#2f5fe0}
+.btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text-2)}
+.btn-ghost:hover{background:var(--panel-2);border-color:#cdd3da;color:var(--text)}
+.btn-danger{background:var(--panel);border-color:#f0c8c6;color:var(--err)}
+.btn-danger:hover{background:var(--err-soft)}
+.btn-sm{padding:4px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+
+/* ---------- 统计卡片 ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0 20px}
+.stat{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow);
+}
+.stat .v{font-size:25px;font-weight:670;letter-spacing:-.02em;line-height:1.2}
+.stat .k{font-size:12.5px;color:var(--text-3);margin-top:3px}
+.stat.accent .v{color:var(--accent)}
+
+/* ---------- 工具条 ---------- */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search{
+  flex:1;min-width:200px;position:relative;
+}
+.search input{
+  width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--panel);outline:none;transition:.13s;
+}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-3)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  padding:5px 11px;border-radius:20px;font-size:12.5px;font-weight:500;
+  background:var(--panel);border:1px solid var(--border);color:var(--text-2);transition:.13s;
+}
+.chip:hover{border-color:#cdd3da}
+.chip.on{background:var(--accent-soft);border-color:#c3d4ff;color:var(--accent-text)}
+
+/* ---------- 技能网格 ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:15px 16px;box-shadow:var(--shadow);transition:.15s;display:flex;flex-direction:column;
+}
+.card:hover{border-color:#cdd3da;box-shadow:0 2px 4px rgba(16,24,40,.06),0 8px 20px rgba(16,24,40,.06)}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.card-name{font-weight:600;font-size:14.5px;word-break:break-word;flex:1;letter-spacing:-.01em}
+.card-desc{
+  color:var(--text-2);font-size:13px;line-height:1.55;margin-bottom:12px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  min-height:40px; flex:1;
+}
+.card-desc.empty{color:var(--text-3);font-style:italic}
+.owners{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:11px;min-height:20px}
+.own{
+  font-size:11px;padding:2px 7px;border-radius:4px;font-weight:500;
+  background:var(--panel-2);border:1px solid var(--border);color:var(--text-2);
+}
+.own.none{background:var(--warn-soft);border-color:#f0dcb8;color:var(--warn)}
+.card-foot{display:flex;align-items:center;gap:6px;padding-top:11px;border-top:1px solid var(--border)}
+.card-meta{font-size:11.5px;color:var(--text-3);margin-right:auto;font-family:var(--mono)}
+
+/* ---------- 空态 ---------- */
+.empty-state{text-align:center;padding:56px 20px;color:var(--text-3)}
+.empty-state svg{width:44px;height:44px;margin-bottom:12px;opacity:.4}
+
+/* ---------- 弹窗 ---------- */
+.mask{
+  position:fixed;inset:0;background:rgba(16,24,40,.42);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:24px;
+  backdrop-filter:blur(2px);
+}
+.mask.on{display:flex}
+.modal{
+  background:var(--panel);border-radius:14px;width:100%;max-width:620px;
+  max-height:88vh;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(16,24,40,.24);animation:pop .18s ease-out;
+}
+@keyframes pop{from{transform:translateY(8px) scale(.985);opacity:0}}
+.modal.wide{max-width:760px}
+.m-hd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center}
+.m-hd h3{font-size:16px;font-weight:640;letter-spacing:-.01em}
+.m-hd .close{margin-left:auto;color:var(--text-3);padding:4px;border-radius:6px;line-height:0}
+.m-hd .close:hover{background:var(--bg);color:var(--text)}
+.m-bd{padding:20px 22px;overflow-y:auto;flex:1}
+.m-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* ---------- 表单 ---------- */
+.tabs{display:flex;gap:3px;background:var(--bg);padding:3px;border-radius:9px;margin-bottom:18px}
+.tab{
+  flex:1;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;
+  color:var(--text-2);text-align:center;transition:.13s;
+}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--panel);color:var(--text);box-shadow:0 1px 2px rgba(16,24,40,.08)}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;font-weight:540;margin-bottom:6px;color:var(--text)}
+.field .hint{font-size:12px;color:var(--text-3);margin-top:5px;line-height:1.5}
+.field input[type=text],.field textarea,.field select{
+  width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--panel);outline:none;transition:.13s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+}
+.field textarea{resize:vertical;min-height:90px;font-family:var(--mono);font-size:12.5px;line-height:1.6}
+.row{display:flex;gap:12px}
+.row>*{flex:1}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;user-select:none}
+.check input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+
+/* ---------- 结果提示 ---------- */
+.alert{
+  padding:11px 14px;border-radius:var(--radius-sm);font-size:13px;
+  margin-bottom:14px;display:flex;gap:9px;line-height:1.5;
+}
+.alert.ok{background:var(--ok-soft);color:#0d7a3d;border:1px solid #bfe8d1}
+.alert.err{background:var(--err-soft);color:#b32d2d;border:1px solid #f5c9c7}
+.alert.warn{background:var(--warn-soft);color:#96620f;border:1px solid #f0dcb8}
+.alert.info{background:var(--accent-soft);color:var(--accent-text);border:1px solid #c3d4ff}
+.alert svg{width:15px;height:15px;flex-shrink:0;margin-top:2px}
+
+/* ---------- 技能详情 ---------- */
+.detail-meta{display:flex;gap:22px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.detail-meta .item .k{font-size:11.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em}
+.detail-meta .item .v{font-size:13.5px;font-weight:540;margin-top:2px}
+pre.code{
+  background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;
+  line-height:1.65;max-height:400px;white-space:pre-wrap;word-break:break-word;
+}
+
+/* ---------- Agent 面板 ---------- */
+.agents{display:flex;flex-direction:column;gap:8px}
+.agent-row{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;
+  background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+}
+.agent-row .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.agent-row .dot.off{background:var(--text-3)}
+.agent-row .nm{font-weight:560;font-size:13.5px;min-width:96px}
+.agent-row .pth{font-family:var(--mono);font-size:11.5px;color:var(--text-3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-row .cnt{font-size:12.5px;color:var(--text-2);font-family:var(--mono)}
+.agent-row .ops{display:flex;gap:6px;flex-shrink:0}
+.agent-edit{
+  display:flex;flex-direction:column;gap:8px;padding:12px 14px;
+  background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+}
+.agent-edit .row{display:flex;gap:8px;align-items:center}
+.agent-edit .row input[type=text]{flex:1}
+.agent-edit .row label{font-size:12.5px;color:var(--text-2);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.agent-add{border-style:dashed;background:transparent}
+
+/* ---------- 采纳预览 ---------- */
+.adopt-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.adopt-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--warn-soft);border:1px solid #f0dcb4;border-radius:var(--radius-sm);
+  font-size:13px;
+}
+.adopt-item .nm{font-weight:560;font-family:var(--mono);font-size:12.5px}
+.adopt-item .src{font-family:var(--mono);font-size:11px;color:var(--text-3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adopt-warn{
+  background:var(--err-soft);border:1px solid #f3c4c0;color:#8f2f2c;
+  padding:10px 13px;border-radius:var(--radius-sm);font-size:12.5px;line-height:1.6;margin-bottom:12px;
+}
+
+/* ---------- 索引 ---------- */
+.idx-info{font-size:13px;color:var(--text-2);line-height:1.7}
+.idx-info code{font-family:var(--mono);font-size:12px;background:var(--panel-2);padding:1px 5px;border-radius:4px;border:1px solid var(--border)}
+.idx-pre{
+  font-family:var(--mono);font-size:11.5px;line-height:1.55;background:var(--panel-2);
+  border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;
+  max-height:300px;overflow:auto;white-space:pre;margin-top:10px;color:var(--text-2);
+}
+
+/* ---------- Toast ---------- */
+#toasts{position:fixed;right:22px;bottom:22px;z-index:200;display:flex;flex-direction:column;gap:9px}
+.toast{
+  background:#1c2024;color:#fff;padding:11px 16px;border-radius:9px;font-size:13.5px;
+  box-shadow:0 8px 24px rgba(16,24,40,.24);animation:slide .22s ease-out;
+  display:flex;align-items:center;gap:9px;max-width:400px;
+}
+@keyframes slide{from{transform:translateX(16px);opacity:0}}
+.toast.ok{background:#0e7a3c}
+.toast.err{background:#b32d2d}
+.toast svg{width:15px;height:15px;flex-shrink:0}
+
+/* ---------- 加载 ---------- */
+.spin{animation:rot .9s linear infinite;width:15px;height:15px}
+@keyframes rot{to{transform:rotate(360deg)}}
+.skeleton{background:linear-gradient(90deg,var(--border) 25%,#eef1f4 50%,var(--border) 75%);
+  background-size:200% 100%;animation:sk 1.3s infinite;border-radius:6px}
+@keyframes sk{to{background-position:-200% 0}}
+.foot{text-align:center;color:var(--text-3);font-size:12.5px;margin-top:36px;padding-top:20px;border-top:1px solid var(--border)}
+.foot code{font-family:var(--mono);background:var(--panel);padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="7.5" height="7.5" rx="2" fill="#3b6ef5"/>
+        <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" fill="#3b6ef5" opacity=".45"/>
+        <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" fill="#3b6ef5" opacity=".45"/>
+        <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" fill="#3b6ef5"/>
+      </svg>
+      <span>Skill Hub</span>
+      <span class="sub">技能统一管理</span>
+    </div>
+    <div class="hd-right">
+      <button class="btn btn-ghost btn-sm" onclick="showAgents()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Agent
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="showIndex()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        索引
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="doHealth()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        体检
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="doSyncAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+        全量同步
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="搜索技能名或描述…" oninput="render()">
+    </div>
+    <div class="chips" id="chips"></div>
+    <button class="btn btn-primary" onclick="openAdd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+      添加技能
+    </button>
+  </div>
+
+  <div id="list" class="grid"></div>
+  <div class="foot">
+    仓库位置 <code id="hubpath">—</code> · 修改仓库内技能后, 所有 Agent 立即同步
+  </div>
+</div>
+
+<!-- 添加技能 -->
+<div class="mask" id="m-add">
+  <div class="modal">
+    <div class="m-hd">
+      <h3>添加技能</h3>
+      <button class="close" onclick="closeM('m-add')"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="m-bd">
+      <div class="tabs">
+        <div class="tab on" data-tab="path" onclick="switchTab('path')">本地目录</div>
+        <div class="tab" data-tab="archive" onclick="switchTab('archive')">压缩包</div>
+        <div class="tab" data-tab="git" onclick="switchTab('git')">Git 仓库</div>
+        <div class="tab" data-tab="text" onclick="switchTab('text')">手动创建</div>
+      </div>
+      <div id="add-msg"></div>
+
+      <div class="pane" id="pane-path">
+        <div class="field">
+          <label>技能目录路径</label>
+          <input type="text" id="f-path" placeholder="C:\path\to\my-skill">
+          <div class="hint">目录内需含 <code>SKILL.md</code>。若父目录下有多个技能, 将全部导入。</div>
+        </div>
+        <div class="field">
+          <label>重命名（可选）</label>
+          <input type="text" id="f-name" placeholder="留空则沿用原目录名">
+        </div>
+      </div>
+
+      <div class="pane" id="pane-archive" style="display:none">
+        <div class="field">
+          <label>压缩包路径</label>
+          <input type="text" id="f-arc" placeholder="C:\path\to\skill.zip 或 skill.tar.gz">
+          <div class="hint">支持 zip / tar.gz。包内含一个或多个技能均可。</div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-git" style="display:none">
+        <div class="field">
+          <label>Git 仓库地址</label>
+          <input type="text" id="f-git" placeholder="https://github.com/user/skills.git">
+          <div class="hint">浅克隆后自动查找仓库内的技能。整个仓库含多个技能时会全部导入。</div>
+        </div>
+        <div class="field">
+          <label>只导入指定技能（可选）</label>
+          <input type="text" id="f-gitname" placeholder="留空则导入全部">
+        </div>
+      </div>
+
+      <div class="pane" id="pane-text" style="display:none">
+        <div class="field">
+          <label>技能名</label>
+          <input type="text" id="f-tname" placeholder="my-skill（字母/数字/._-）">
+        </div>
+        <div class="field">
+          <label>描述</label>
+          <input type="text" id="f-tdesc" placeholder="一句话说明这个技能做什么、何时使用">
+        </div>
+        <div class="field">
+          <label>正文（Markdown，可选）</label>
+          <textarea id="f-tbody" placeholder="# My Skill&#10;&#10;指令内容…"></textarea>
+        </div>
+      </div>
+
+      <label class="check"><input type="checkbox" id="f-ow"> 同名技能已存在时覆盖</label>
+    </div>
+    <div class="m-ft">
+      <button class="btn btn-ghost" onclick="closeM('m-add')">取消</button>
+      <button class="btn btn-primary" id="btn-add" onclick="doAdd()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 技能详情 -->
+<div class="mask" id="m-detail">
+  <div class="modal wide">
+    <div class="m-hd">
+      <h3 id="d-title">技能详情</h3>
+      <button class="close" onclick="closeM('m-detail')"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="m-bd" id="d-body"></div>
+    <div class="m-ft" id="d-foot"></div>
+  </div>
+</div>
+
+<!-- Agent 面板 -->
+<div class="mask" id="m-agents">
+  <div class="modal wide">
+    <div class="m-hd">
+      <h3>Agent 目录</h3>
+      <button class="close" onclick="closeM('m-agents')"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="m-bd"><div class="agents" id="agent-list"></div></div>
+    <div class="m-ft">
+      <button class="btn btn-ghost" onclick="doAdapt()">收编孤立技能…</button>
+      <button class="btn btn-primary" onclick="closeM('m-agents')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 采纳预览 -->
+<div class="mask" id="m-adopt">
+  <div class="modal wide">
+    <div class="m-hd">
+      <h3>收编孤立技能</h3>
+      <button class="close" onclick="closeM('m-adopt')"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="m-bd">
+      <div class="adopt-warn" id="adopt-warn">
+        ⚠️ 此操作是<strong>破坏性</strong>的：下列技能的<strong>原目录会被移入仓库</strong>，原位置改为链接。
+        执行前会自动备份到 <code>~/.skills-hub/.backup/&lt;时间戳&gt;/</code>。
+      </div>
+      <div id="adopt-body"></div>
+    </div>
+    <div class="m-ft">
+      <button class="btn btn-ghost" onclick="closeM('m-adopt')">取消</button>
+      <button class="btn btn-primary" id="btn-adopt" onclick="doAdopt()">确认收编</button>
+    </div>
+  </div>
+</div>
+
+<!-- 索引 -->
+<div class="mask" id="m-index">
+  <div class="modal wide">
+    <div class="m-hd">
+      <h3>技能索引</h3>
+      <button class="close" onclick="closeM('m-index')"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="m-bd" id="index-body"></div>
+    <div class="m-ft">
+      <button class="btn btn-ghost" onclick="doWriteIndex()">重新生成</button>
+      <button class="btn btn-primary" onclick="closeM('m-index')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+let STATE = {skills:[],agents:[],hub:''};
+let FILTER = 'all';
+
+/* ---------- 工具 ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path, opts){
+  const r = await fetch(path, opts);
+  return r.json();
+}
+function toast(msg, type='ok'){
+  const icons = {
+    ok:'<path d="M20 6L9 17l-5-5"/>',
+    err:'<path d="M18 6L6 18M6 6l12 12"/>'
+  };
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${icons[type]||''}</svg><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }, 3200);
+}
+const ICON_SPIN = '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-6.2-8.5"/></svg>';
+
+/* ---------- 加载 ---------- */
+async function load(){
+  const d = await api('/api/scan');
+  STATE.skills = d.skills;
+  STATE.agents = d.agents;
+  STATE.hub = d.hub_dir;
+  $('#hubpath').textContent = d.hub_dir;
+  renderStats(d);
+  renderChips();
+  render();
+}
+
+function renderStats(d){
+  const mounted = d.agents.reduce((a,x)=>a+x.skill_count,0);
+  const shared = d.skills.filter(s=>s.owners.length>1).length;
+  const orphans = d.agents.reduce((a,x)=>a+x.orphan.length,0);
+  const active = d.agents.filter(a=>a.exists).length;
+  $('#stats').innerHTML = `
+    ${statCard(d.total_skills,'仓库技能','accent')}
+    ${statCard(mounted,'已挂载')}
+    ${statCard(active,'活跃 Agent')}
+    ${statCard(shared,'多端共享')}
+    ${statCard(orphans,'孤立技能', orphans>0?'warn':'')}
+  `;
+}
+function statCard(v,k,cls=''){
+  return `<div class="stat ${cls}"><div class="v">${v}</div><div class="k">${k}</div></div>`;
+}
+
+function renderChips(){
+  const chips = [['all','全部']];
+  STATE.agents.filter(a=>a.exists).forEach(a=>{
+    chips.push([a.id, a.label + ' ' + a.skill_count]);
+  });
+  $('#chips').innerHTML = chips.map(([id,label])=>
+    `<button class="chip ${FILTER===id?'on':''}" onclick="setFilter('${id}')">${esc(label)}</button>`
+  ).join('');
+}
+function setFilter(id){ FILTER = id; renderChips(); render(); }
+
+/* ---------- 渲染列表 ---------- */
+function render(){
+  const q = ($('#q').value||'').toLowerCase().trim();
+  let list = STATE.skills;
+  if(FILTER !== 'all'){
+    const a = STATE.agents.find(x=>x.id===FILTER);
+    if(a) list = list.filter(s => a.present.includes(s.name));
+  }
+  if(q){
+    list = list.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      (s.description||'').toLowerCase().includes(q));
+  }
+  if(!list.length){
+    $('#list').innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <div>没有匹配的技能</div></div>`;
+    return;
+  }
+  $('#list').innerHTML = list.map(card).join('');
+}
+
+function card(s){
+  const owners = s.owners.length
+    ? s.owners.map(o=>{
+        const a = STATE.agents.find(x=>x.id===o);
+        return `<span class="own">${esc(a?a.label:o)}</span>`;
+      }).join('')
+    : '<span class="own none">未挂载</span>';
+  const warnMd = s.has_skill_md ? '' : ' · <span style="color:var(--warn)">无 SKILL.md</span>';
+  return `<div class="card">
+    <div class="card-top">
+      <div class="card-name">${esc(s.name)}</div>
+    </div>
+    <div class="card-desc ${s.description?'':'empty'}">${esc(s.description)||'（无描述）'}</div>
+    <div class="owners">${owners}</div>
+    <div class="card-foot">
+      <span class="card-meta">${s.size_kb}KB${warnMd}</span>
+      <button class="btn btn-ghost btn-sm" onclick="openDetail('${esc(s.name)}')">查看</button>
+      <button class="btn btn-ghost btn-sm" onclick="syncOne('${esc(s.name)}')">同步</button>
+      <button class="btn btn-danger btn-sm" onclick="removeOne('${esc(s.name)}')">删除</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- 操作 ---------- */
+async function syncOne(name){
+  toast('正在同步 ' + name + ' …', 'ok');
+  const r = await api('/api/sync', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name})
+  });
+  if(r.ok){
+    const linked = r.results.filter(x=>x.status==='linked').length;
+    const already = r.results.filter(x=>x.status==='already').length;
+    toast(`已同步 ${name}：新挂载 ${linked} 个，已存在 ${already} 个`, 'ok');
+    load();
+  } else toast(r.error || '同步失败', 'err');
+}
+
+async function syncSkillToOne(name, agentId){
+  const r = await api('/api/sync', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, agents:[agentId]})
+  });
+  if(r.ok){ toast('已挂载到 ' + agentId, 'ok'); load(); openDetail(name, true); }
+  else toast(r.error||'失败','err');
+}
+
+async function unsyncSkillFrom(name, agentId){
+  const r = await api('/api/unsync', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, agents:[agentId]})
+  });
+  if(r.ok){ toast('已从 ' + agentId + ' 摘除', 'ok'); load(); openDetail(name, true); }
+  else toast(r.error||'失败','err');
+}
+
+async function removeOne(name){
+  if(!confirm(`确定删除技能「${name}」？\n\n将从仓库移除, 并摘除所有 Agent 的链接。\n此操作不可撤销。`)) return;
+  const r = await api('/api/remove', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name})
+  });
+  if(r.ok){ toast('已删除 ' + name, 'ok'); load(); }
+  else toast(r.error||'删除失败','err');
+}
+
+async function doSyncAll(){
+  const btn = event.target.closest('button');
+  btn.disabled = true; btn.innerHTML = ICON_SPIN + ' 同步中';
+  const r = await api('/api/sync', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'
+  });
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg> 全量同步';
+  if(r.ok){
+    let linked=0, failed=0;
+    Object.values(r.report).forEach(x=>x.results.forEach(y=>{
+      if(y.status==='linked') linked++;
+      if(y.status==='failed') failed++;
+    }));
+    toast(`全量同步完成：新挂载 ${linked} 个${failed?', 失败 '+failed+' 个':''}`, failed?'err':'ok');
+    load();
+  } else toast('同步失败','err');
+}
+
+async function doHealth(){
+  const r = await api('/api/health');
+  if(r.ok && !r.issues.length){ toast('体检通过：一切正常', 'ok'); return; }
+  const errs = r.issues.filter(i=>i.level==='error');
+  const warns = r.issues.filter(i=>i.level==='warn');
+  if(errs.length){
+    const detail = errs.map(e=>e.msg + (e.items?' → '+e.items.join(', '):'')).join('；');
+    if(confirm('发现 ' + errs.length + ' 个问题：\n\n' + detail + '\n\n是否尝试自动修复断链？')){
+      const rr = await api('/api/repair', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+      toast('已修复 ' + (rr.fixed||[]).length + ' 个断链', 'ok');
+      load();
+    }
+  } else if(warns.length){
+    toast(warns[0].msg, 'err');
+  } else {
+    toast('体检通过：一切正常', 'ok');
+  }
+}
+
+/* ---------- Agent 面板 ---------- */
+let PRESETS = [];
+
+async function showAgents(){
+  const r = await api('/api/agents');
+  PRESETS = r.presets || [];
+  renderAgents(r.agents || []);
+  openM('m-agents');
+}
+
+function renderAgents(agents){
+  const rows = agents.map(a=>`
+    <div class="agent-edit">
+      <div class="row">
+        <input type="text" value="${esc(a.label)}" onchange="editAgent('${esc(a.id)}','label',this.value)">
+        <label><input type="checkbox" ${a.enabled?'checked':''} onchange="editAgent('${esc(a.id)}','enabled',this.checked)"> 启用</label>
+        <button class="btn btn-ghost btn-sm" onclick="delAgent('${esc(a.id)}')">移除</button>
+      </div>
+      <div class="row">
+        <input type="text" value="${esc(a.path)}" onchange="editAgent('${esc(a.id)}','path',this.value)">
+        <span class="cnt" title="${esc(a.id)}">${esc(a.id)}</span>
+      </div>
+    </div>`).join('');
+
+  const presets = PRESETS.map(p=>`
+    <div class="agent-row agent-add">
+      <span class="dot ${p.exists?'':'off'}"></span>
+      <span class="nm">${esc(p.label)}</span>
+      <span class="pth" title="${esc(p.path)}">${esc(p.path)}</span>
+      <span class="cnt">${p.exists?'已存在':'未发现'}</span>
+      <button class="btn btn-ghost btn-sm" onclick="addPreset('${esc(p.id)}')">添加</button>
+    </div>`).join('');
+
+  $('#agent-list').innerHTML =
+    (rows || '<div class="idx-info">尚未纳管任何 Agent 目录</div>') +
+    (presets ? '<div class="idx-info" style="margin:14px 0 4px">可添加的预设</div>' + presets : '');
+}
+
+async function editAgent(id, field, value){
+  const body = {id}; body[field] = value;
+  const r = await api('/api/agents/update', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  if(!r.ok){ toast(r.error||'修改失败','err'); return; }
+  toast('已更新','ok'); load();
+}
+
+async function delAgent(id){
+  if(!confirm('从配置中移除 agent: ' + id + '？\n\n（不会删除磁盘上已有的链接，仅停止纳管）')) return;
+  const r = await api('/api/agents/remove', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})});
+  if(!r.ok){ toast(r.error||'移除失败','err'); return; }
+  toast('已移除 ' + id,'ok'); showAgents(); load();
+}
+
+async function addPreset(id){
+  const p = PRESETS.find(x=>x.id===id);
+  if(!p) return;
+  const r = await api('/api/agents/add', {method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:p.id, label:p.label, path:p.path, enabled:true})});
+  if(!r.ok){ toast(r.error||'添加失败','err'); return; }
+  toast('已添加 ' + p.label,'ok'); showAgents(); load();
+}
+
+/* 收编: 先预览, 再确认 (ADR 0002) */
+async function doAdapt(){
+  const r = await api('/api/adopt/preview');
+  const items = r.items || [];
+  if(!items.length){
+    toast('没有需要收编的孤立技能','ok');
+    return;
+  }
+  $('#adopt-body').innerHTML =
+    `<div class="idx-info" style="margin-bottom:10px">将移动 <b>${items.length}</b> 个技能：</div>` +
+    '<div class="adopt-list">' + items.map(it=>`
+      <div class="adopt-item">
+        <span class="nm">${esc(it.name)}</span>
+        <span class="src" title="${esc(it.source)}">${esc(it.agent_label)}</span>
+        <span class="cnt">${it.action==='copy_then_link'?'移入仓库':'仅转链接'} · ${it.size_kb}KB</span>
+      </div>`).join('') + '</div>';
+  openM('m-adopt');
+}
+
+async function doAdopt(){
+  const btn = $('#btn-adopt');
+  btn.disabled = true; btn.textContent = '处理中…';
+  const r = await api('/api/adopt', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({confirm:true})});
+  btn.disabled = false; btn.textContent = '确认收编';
+  if(!r.ok && r.error){ toast(r.error,'err'); return; }
+  closeM('m-adopt');
+  toast(`收编 ${(r.adopted||[]).length} 个 · 转链 ${(r.relinked||[]).length} 个` + (r.backup?' · 已备份':''), 'ok');
+  load(); showAgents();
+}
+
+/* ---------- 索引 ---------- */
+async function showIndex(){
+  const md = await fetch('/api/index?md=1').then(r=>r.text());
+  $('#index-body').innerHTML =
+    `<div class="idx-info">
+       索引由程序自动维护，写入 <code>~/.skills-hub/SKILLS.md</code>（同时产出 <code>index.json</code>）。
+       添加或删除技能后会自动刷新。此文件属本地产物，建议加入 <code>.gitignore</code>。
+     </div>
+     <div class="idx-pre">${esc(md)}</div>`;
+  openM('m-index');
+}
+
+async function doWriteIndex(){
+  const r = await api('/api/index/write', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+  if(!r.ok){ toast(r.error||'生成失败','err'); return; }
+  toast('已生成索引（' + r.total + ' 个技能）','ok');
+  showIndex();
+}
+
+/* ---------- 详情 ---------- */
+async function openDetail(name, silent){
+  const d = await api('/api/skill?name=' + encodeURIComponent(name));
+  if(!d.ok){ toast(d.error||'读取失败','err'); return; }
+  $('#d-title').textContent = name;
+  const meta = d.meta || {};
+  const owners = STATE.skills.find(s=>s.name===name)?.owners || [];
+  const agentRows = STATE.agents.map(a=>{
+    const has = owners.includes(a.id);
+    const can = a.exists;
+    return `<div class="agent-row">
+      <span class="dot ${has?'':'off'}"></span>
+      <span class="nm">${esc(a.label)}</span>
+      <span class="pth">${has?'已挂载':'未挂载'}</span>
+      ${can ? (has
+        ? `<button class="btn btn-ghost btn-sm" onclick="unsyncSkillFrom('${esc(name)}','${a.id}')">摘除</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="syncSkillToOne('${esc(name)}','${a.id}')">挂载</button>`)
+        : '<span class="cnt">目录不存在</span>'}
+    </div>`;
+  }).join('');
+
+  const fm = (d.content||'').match(/^---\s*\n(.*?)\n---/s);
+  const body = fm ? d.content.slice(fm[0].length).trim() : (d.content||'');
+  $('#d-body').innerHTML = `
+    <div class="detail-meta">
+      <div class="item"><div class="k">大小</div><div class="v">${d.size_kb} KB</div></div>
+      <div class="item"><div class="k">文件数</div><div class="v">${d.files.length}</div></div>
+      <div class="item"><div class="k">挂载于</div><div class="v">${owners.length} 个 Agent</div></div>
+      ${d.meta.description?`<div class="item" style="flex:1"><div class="k">描述</div><div class="v" style="font-weight:400;font-size:13px">${esc(d.meta.description)}</div></div>`:''}
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:13px;font-weight:540;display:block;margin-bottom:8px">挂载状态</label>
+      <div class="agents">${agentRows}</div>
+    </div>
+    ${body?`<label style="font-size:13px;font-weight:540;display:block;margin-bottom:8px">SKILL.md</label>
+      <pre class="code">${esc(body)}</pre>`:'<div class="alert warn">该技能缺少 SKILL.md</div>'}
+  `;
+  $('#d-foot').innerHTML = `
+    <button class="btn btn-ghost" onclick="removeOne('${esc(name)}'); closeM('m-detail')">删除技能</button>
+    <button class="btn btn-primary" onclick="syncOne('${esc(name)}')">同步到全部</button>
+  `;
+  if(!silent) openM('m-detail');
+}
+
+/* ---------- 添加 ---------- */
+function openAdd(){
+  $('#add-msg').innerHTML = '';
+  ['f-path','f-name','f-arc','f-git','f-gitname','f-tname','f-tdesc','f-tbody'].forEach(id=>{
+    const el=$('#'+id); if(el) el.value='';
+  });
+  $('#f-ow').checked = false;
+  openM('m-add');
+}
+function switchTab(t){
+  document.querySelectorAll('#m-add .tab').forEach(e=>e.classList.toggle('on', e.dataset.tab===t));
+  ['path','archive','git','text'].forEach(x=>{
+    $('#pane-'+x).style.display = (x===t) ? '' : 'none';
+  });
+  $('#m-add').dataset.tab = t;
+}
+async function doAdd(){
+  const tab = $('#m-add').dataset.tab || 'path';
+  const ow = $('#f-ow').checked;
+  let payload = {mode:tab, overwrite:ow};
+  if(tab==='path'){ payload.path = $('#f-path').value.trim(); payload.name = $('#f-name').value.trim()||null; }
+  else if(tab==='archive'){ payload.path = $('#f-arc').value.trim(); }
+  else if(tab==='git'){ payload.url = $('#f-git').value.trim(); payload.name = $('#f-gitname').value.trim()||null; }
+  else if(tab==='text'){
+    payload.name = $('#f-tname').value.trim();
+    payload.description = $('#f-tdesc').value.trim();
+    payload.body = $('#f-tbody').value.trim();
+  }
+  if(tab!=='text' && !payload.path && !payload.url){
+    $('#add-msg').innerHTML = alertBox('err','请填写路径'); return;
+  }
+  if(tab==='text' && !payload.name){
+    $('#add-msg').innerHTML = alertBox('err','请填写技能名'); return;
+  }
+  const btn = $('#btn-add');
+  btn.disabled = true; const old = btn.innerHTML; btn.innerHTML = ICON_SPIN + ' 处理中';
+  const r = await api('/api/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  btn.disabled = false; btn.innerHTML = old;
+
+  if(r.ok){
+    const added = r.added || [];
+    let msg = `成功添加 ${added.length} 个技能`;
+    if(r.conflicts && r.conflicts.length) msg += `，跳过已存在: ${r.conflicts.join(', ')}`;
+    toast(msg, 'ok');
+    closeM('m-add');
+    // 询问是否立即同步
+    if(added.length && confirm(`已添加 ${added.length} 个技能。\n\n是否立即同步到全部 Agent？`)){
+      for(const n of added) await api('/api/sync', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:n})});
+      toast(`已同步 ${added.length} 个技能到全部 Agent`, 'ok');
+    }
+    load();
+  } else {
+    $('#add-msg').innerHTML = alertBox('err', r.error || '添加失败');
+  }
+}
+function alertBox(type, msg){
+  return `<div class="alert ${type}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg><span>${esc(msg)}</span></div>`;
+}
+
+/* ---------- 弹窗控制 ---------- */
+function openM(id){ $('#'+id).classList.add('on'); }
+function closeM(id){ $('#'+id).classList.remove('on'); }
+document.querySelectorAll('.mask').forEach(m=>{
+  m.addEventListener('mousedown', e=>{ if(e.target===m) m.classList.remove('on'); });
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') document.querySelectorAll('.mask.on').forEach(m=>m.classList.remove('on'));
+});
+
+/* ---------- 启动 ---------- */
+load();
+</script>
+</body>
+</html>
