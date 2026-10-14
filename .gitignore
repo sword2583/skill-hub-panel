@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 运行时生成（含本机路径，不应提交）
+config.json
+
+# 技能索引：由程序自动生成，含个人技能清单，不进版本控制
+# （仓库中保留 SKILLS.example.md 演示格式）
+SKILLS.md
+index.json
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
